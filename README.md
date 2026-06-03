@@ -1,6 +1,6 @@
 # Is Backpropagation Optimal? When Synthetic Gradients Improve Sample Efficiency
 
-This repository contains code for the experiments in the paper *Is Backpropagation Optimal? When Synthetic Gradients Improve Sample Efficiency*.
+This repository contains code for the experiments in the paper [*Is Backpropagation Optimal? When Synthetic Gradients Improve Sample Efficiency*](https://arxiv.org/abs/2605.27946v1).
 
 The repository includes three experiments:
 
