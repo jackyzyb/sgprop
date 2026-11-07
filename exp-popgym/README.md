@@ -1,6 +1,6 @@
 # POPGYM Experiments
 
-This experiment tests different recurrent models on a set of partially observable reinforcement learning environments, as described in Section 6 and Section H.4 from the paper. The environments used here are `labyrinth_escape` and `labyrinth_explore` from [POPGym](https://github.com/proroklab/popgym). The experiment compares synthetic-gradient propagation and backpropagation on a sparsely connected network, and GRU and LSTM baselines, using the REINFORCE policy gradients.
+This experiment tests different recurrent models on a set of partially observable reinforcement learning environments, as described in Section 6 and Section I.4 from the paper. The environments used here are `labyrinth_escape` and `labyrinth_explore` from [POPGym](https://github.com/proroklab/popgym). The experiment compares synthetic-gradient propagation and backpropagation on a sparsely connected network, and GRU and LSTM baselines, using the REINFORCE policy gradients.
 
 To install POPGym:
 ```bash
@@ -25,6 +25,9 @@ Each training batch:
 7. applies one REINFORCWE policy-gradient update with BPTT or BPTT mixed synthetic gradients 
 
 By default, the per-neuron base theta is fixed across training. During each BPTT backward pass, the trainer builds a temporal theta schedule from that base value: later timesteps use the base theta, while earlier timesteps are increased toward `1.0` according to downstream sparse connectivity. This makes the proportion of synthetic gradient consistent across time.
+
+SGProp always uses the convex combination
+`theta * true_gradient + (1 - theta) * predicted_gradient`, with the raw SG prediction.
 
 
 ## Output Files

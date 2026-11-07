@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-BASE_DEVICE="cuda"
+PYTHON_BIN="${PYTHON_BIN:-python}"
+BASE_DEVICE="${DEVICE:-cuda}"
 BASE_CLASSES=(0 1 3 4 5 6 7 8 9)
 BASE_P_FLIP=0.4
 BASE_N_DIM=10
@@ -40,7 +41,7 @@ run_one() {
 
   echo "Running method=${method_name} seed=${seed} fixed_theta=${fixed_theta} results_dir=${FIXED_THETA_RESULTS_DIR}"
 
-  python main.py \
+  "${PYTHON_BIN}" main.py \
     --policy_model "${policy_model}" \
     --method "${method}" \
     --method_name "${method_name}" \

@@ -1,6 +1,6 @@
 # Synthetic-Gradient Expert Simulation
 
-This directory implements the finite-partition expert-network experiment, as described in Section 6 and Section H.1 from the paper. The experiment in paper uses default parameters:
+This directory implements the finite-partition expert-network experiment, as described in Section 6 and Section I.1 from the paper. The experiment in paper uses default parameters:
 
 | Parameter | Value |
 | --- | --- |

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-BASE_DEVICE="cuda"
-BASE_CLASSES=(0 1 3 4 5 6 7 8 9)
+PYTHON_BIN="${PYTHON_BIN:-python}"
+BASE_DEVICE="${DEVICE:-cuda}"
+BASE_CLASSES=(0 1 2 3 4 5 6 7 8 9)
 BASE_P_FLIP=0.4
 BASE_N_DIM=10
 BASE_NUM_LAYERS=5
@@ -94,7 +95,7 @@ run_one() {
 
   echo "Running variant=${variant} seed=${seed} sweep_dir=${results_dir} p_flip=${p_flip} policy_lr=${policy_lr} n_dim=${n_dim} num_layers=${num_layers} width=${width} num_slots=${num_slots} num_parents=${num_parents} batch_size=${batch_size}"
 
-  python main.py \
+  "${PYTHON_BIN}" main.py \
     --policy_model "${policy_model}" \
     --method "${method}" \
     --method_name "${method_name}" \

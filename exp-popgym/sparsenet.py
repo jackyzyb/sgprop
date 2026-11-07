@@ -28,7 +28,6 @@ class SparseNetConfig:
     theta_momentum: float = 1.0
     adaptive_theta: bool = False
     training_mode: str = "sgprop"
-    sgprop_gradient_mode: str = "prediction"
 
     def __post_init__(self) -> None:
         if self.width < 1:
@@ -49,10 +48,6 @@ class SparseNetConfig:
             raise ValueError("theta_momentum must be in [0, 1]")
         if self.training_mode not in {"backprop", "sgprop"}:
             raise ValueError("training_mode must be 'backprop' or 'sgprop'")
-        if self.sgprop_gradient_mode not in {"prediction", "positive_projection"}:
-            raise ValueError(
-                "sgprop_gradient_mode must be 'prediction' or 'positive_projection'"
-            )
         if self.num_input_neurons is not None and self.num_input_neurons < 0:
             raise ValueError("num_input_neurons must be >= 0")
 

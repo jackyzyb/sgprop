@@ -90,6 +90,12 @@ def categorical_log_prob(logits: torch.Tensor, action: torch.Tensor) -> torch.Te
     return log_probs.gather(dim=1, index=action.unsqueeze(-1)).squeeze(-1)
 
 
+def categorical_entropy(logits: torch.Tensor) -> torch.Tensor:
+    """Entropy in nats for each categorical distribution in the batch."""
+    log_probs = F.log_softmax(logits, dim=-1)
+    return -(log_probs.exp() * log_probs).sum(dim=-1)
+
+
 def _forward_policy_graph(
     policy: SparsePolicy,
     x0: torch.Tensor,
@@ -313,9 +319,13 @@ def train_sg_phase(
     theta: torch.Tensor,
     update_shared_keys: bool,
     fixed_batch: Optional[Dict[str, torch.Tensor]] = None,
+    entropy_coef: float = 0.0,
+    loss_normalization_size: int | None = None,
 ) -> List[float]:
     if sg_steps < 1:
         raise ValueError("sg_steps must be >= 1")
+    if loss_normalization_size is not None and loss_normalization_size < 1:
+        raise ValueError("loss_normalization_size must be positive")
     running_losses = torch.zeros(policy.num_layers + 1, device=env.device)
 
     fixed_x0: Optional[torch.Tensor] = None
@@ -340,7 +350,15 @@ def train_sg_phase(
 
         layer_inputs, hidden_states, action_logits = _forward_policy_graph(policy, x0)
         log_prob = categorical_log_prob(action_logits, action)
-        reinforce_loss = -(reward * log_prob).mean()
+        per_example_loss = -(reward * log_prob)
+        if entropy_coef != 0.0:
+            per_example_loss = per_example_loss - entropy_coef * categorical_entropy(action_logits)
+        # Same-batch ablations normalize every microbatch by the full policy batch.
+        reinforce_loss = (
+            per_example_loss.mean()
+            if loss_normalization_size is None
+            else per_example_loss.sum() / loss_normalization_size
+        )
 
         action_target = torch.autograd.grad(
             outputs=reinforce_loss,
@@ -414,6 +432,7 @@ def policy_step_backprop(
     policy_optimizer: torch.optim.Optimizer,
     batch_size: int,
     fixed_batch: Optional[Dict[str, torch.Tensor]] = None,
+    entropy_coef: float = 0.0,
 ) -> Dict[str, float]:
     if fixed_batch is None:
         x0, labels = env.sample_context(batch_size=batch_size, split="train")
@@ -428,7 +447,10 @@ def policy_step_backprop(
         _, action_logits = policy.forward_logits(x0)
 
     log_prob = categorical_log_prob(action_logits, action)
+    entropy = categorical_entropy(action_logits).mean()
     loss = -(reward * log_prob).mean()
+    if entropy_coef != 0.0:
+        loss = loss - entropy_coef * entropy
 
     policy_optimizer.zero_grad()
     loss.backward()
@@ -437,6 +459,7 @@ def policy_step_backprop(
     return {
         "policy_loss": float(loss.item()),
         "batch_reward": float(reward.mean().item()),
+        "policy_entropy": float(entropy.item()),
     }
 
 
@@ -452,6 +475,7 @@ def policy_step_sgprop(
     mix_action_layer_gradient: bool,
     collect_grad_diagnostics: bool = False,
     fixed_batch: Optional[Dict[str, torch.Tensor]] = None,
+    entropy_coef: float = 0.0,
 ) -> Dict[str, Any]:
     grad_diagnostics: Dict[str, float] = {}
 
@@ -545,7 +569,10 @@ def policy_step_sgprop(
         hook_handles.append(hidden.register_hook(make_hook(layer_idx, hat, layer_input)))
 
     log_prob = categorical_log_prob(action_logits, action)
+    entropy = categorical_entropy(action_logits).mean()
     loss = -(reward * log_prob).mean()
+    if entropy_coef != 0.0:
+        loss = loss - entropy_coef * entropy
 
     policy_optimizer.zero_grad()
     loss.backward()
@@ -556,6 +583,7 @@ def policy_step_sgprop(
     return {
         "policy_loss": float(loss.item()),
         "batch_reward": float(reward.mean().item()),
+        "policy_entropy": float(entropy.item()),
         "grad_diagnostics": grad_diagnostics,
     }
 

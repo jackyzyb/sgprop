@@ -69,12 +69,6 @@ def parser() -> argparse.ArgumentParser:
         default="sgprop",
         choices=["backprop", "sgprop"],
     )
-    arg_parser.add_argument(
-        "--sgprop-gradient-mode",
-        type=str,
-        default="prediction",
-        choices=["prediction", "positive_projection"],
-    )
     return arg_parser
 
 
@@ -133,7 +127,6 @@ def build_configs(
             theta_momentum=args.theta_momentum,
             adaptive_theta=args.adaptive_theta,
             training_mode=args.training_mode,
-            sgprop_gradient_mode=args.sgprop_gradient_mode,
         )
     return env_config, trainer_config, run_config, model_config
 

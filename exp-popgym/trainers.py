@@ -401,28 +401,6 @@ def build_temporal_theta_schedule(
     return theta_schedule
 
 
-def positive_prediction_projection(
-    grad: Tensor,
-    predicted: Tensor,
-    eps: float = 1e-12,
-) -> Tensor:
-    dot = (grad * predicted).sum(dim=-1, keepdim=True).clamp_min(0.0)
-    predicted_norm_sq = predicted.pow(2).sum(dim=-1, keepdim=True).clamp_min(eps)
-    return dot * predicted / predicted_norm_sq
-
-
-def sgprop_substitute_gradient(
-    model: SparseNetPolicy,
-    grad: Tensor,
-    predicted: Tensor,
-) -> Tensor:
-    if model.config.sgprop_gradient_mode == "prediction":
-        return predicted
-    if model.config.sgprop_gradient_mode == "positive_projection":
-        return positive_prediction_projection(grad, predicted)
-    raise ValueError(f"Unknown sgprop gradient mode: {model.config.sgprop_gradient_mode}")
-
-
 def estimate_theta_batch_sparsenet(
     model: SparseNetPolicy,
     neuron_input: Tensor,
@@ -646,8 +624,7 @@ def update_model_sparsenet(
         def make_hook(step_idx: int, predicted: Tensor, theta_view: Tensor):
             def _hook(grad: Tensor) -> Tensor:
                 true_grad_targets[step_idx] = grad.detach()
-                substitute_grad = sgprop_substitute_gradient(model, grad, predicted)
-                mixed_grad = theta_view * grad + (1.0 - theta_view) * substitute_grad
+                mixed_grad = theta_view * grad + (1.0 - theta_view) * predicted
                 mixed_grad_targets[step_idx] = mixed_grad.detach()
                 return mixed_grad
 
@@ -687,17 +664,12 @@ def update_model_sparsenet(
     if model.config.adaptive_theta:
         valid_flat = tensors["valid_mask"].flatten() > 0.0
         if valid_flat.sum().item() > 1:
-            theta_substitute_tensor = sgprop_substitute_gradient(
-                model,
-                true_grad_tensor,
-                sg_prediction_tensor.detach(),
-            )
             with torch.no_grad():
                 theta_batch = estimate_theta_batch_sparsenet(
                     model,
                     neuron_input_tensor.flatten(0, 1)[valid_flat],
                     true_grad_tensor.flatten(0, 1)[valid_flat],
-                    theta_substitute_tensor.flatten(0, 1)[valid_flat],
+                    sg_prediction_tensor.detach().flatten(0, 1)[valid_flat],
                     model.theta_state,
                 )
                 model.theta_state.mul_(model.theta_momentum).add_(

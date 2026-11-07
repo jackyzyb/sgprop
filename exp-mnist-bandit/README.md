@@ -1,6 +1,21 @@
 # MNIST Contextual Bandit
 
-This is a noisy MNIST contextual bandit experiment, as described in Section 6 and Section H.3 from the paper. This experiment compare synthetic-gradient propagation and backpropagation on a sparsely connected network, and a MLP baseline.
+This is a noisy MNIST contextual bandit experiment, as described in Section 6 and Section I.3 from the paper. It compares synthetic-gradient propagation and backpropagation on a sparsely connected network, and an MLP baseline.
+
+## Setup
+
+From the repository root, use Python 3.10+:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r exp-mnist-bandit/requirements.txt
+cd exp-mnist-bandit
+```
+
+MNIST is downloaded automatically on first use and cached under `data/` by default.
+The [ablation guide](ablations/ablations.md) includes small CPU runs, sweep commands,
+and plotting instructions for Condition B and MSE.
 
 ## Training Loop
 
@@ -42,16 +57,28 @@ Each run writes:
 
 **Main sweeps** use script: 
 ```bash
-run_sweeps.sh
+bash run_sweeps.sh
 ```
 
 **Fixed-Lambda Ablations** use script:
 ```bash
-run_sweeps_fix_theta.sh
+bash run_sweeps_fix_theta.sh
 ```
+
+Run these commands from `exp-mnist-bandit/`. The main sweeps default to CUDA;
+use `DEVICE=cpu bash run_sweeps.sh` (or the fixed-theta script) on a CPU machine.
+`PYTHON_BIN` can override the active environment's `python` executable.
 
 ## Plotting
 
 - `plot_sweeps.py` plots the main sweeps using `SparseNet sgprop`,
   `SparseNet backprop`, and `MLP`; fixed-theta runs are omitted from those comparison plots.
 - `plot_theta_ablation.py` plots training dynamics for adaptive lambda, fixed lambda `0`, fixed lambda `0.5`, and sparse backprop at `policy_lr=0.001`.
+
+## Tests
+
+From the repository root, run the trainer tests without downloading MNIST:
+
+```bash
+python -m unittest discover -s exp-mnist-bandit -p 'test_*.py'
+```
