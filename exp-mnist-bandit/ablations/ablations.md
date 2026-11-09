@@ -74,9 +74,7 @@ This ablation isolates SG prediction from policy learning. It initializes a Spar
 
 For each validation image, the evaluator computes the true conditional hidden-state gradient by analytically averaging the REINFORCE gradient over all possible actions under the fixed policy:
 
-$$
-g_\ell(x)
-=
+$$ g_\ell(x) =
 \mathbb{E}_{a\sim\pi(\cdot\mid x)}
 \left[
   -r(a,y)\frac{\partial \log \pi(a\mid x)}{\partial h_\ell}
@@ -124,8 +122,7 @@ For `sg_same`, each minibatch SG target is normalized by the original full polic
 The training objective optionally contains an entropy bonus:
 
 $$
-L
-=
+L=
 -r\log\pi(a\mid x)-\beta H(\pi(\cdot\mid x)).
 $$
 
@@ -142,8 +139,7 @@ The current default run lasts 1,000 policy steps. At six evenly spaced points, b
 
 $$
 g_{\mathrm{target}}
-=
-\nabla_\phi\frac{1}{N}\sum_i
+=\nabla_\phi\frac{1}{N}\sum_i
 \left[-\pi_\phi(y_i\mid x_i)-\beta H(\pi_\phi(\cdot\mid x_i))\right].
 $$
 
