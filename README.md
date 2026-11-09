@@ -9,8 +9,7 @@ The repository includes three main experiment groups:
 - **POPGym experiments:** evaluates recurrent policies on partially observable reinforcement-learning tasks. See [`exp-popgym/README.md`](exp-popgym/README.md).
 
 A GPT-MoE experiment is provided as a preliminary extension of synthetic gradients (SG) to
-transformers, used as an ablation experiment in the paper, not a main experiment.
-It compares standard GPT, backpropagation through expert FFNs, and synthetic-gradient
+transformers, used as an ablation experiment in the paper. It compares standard GPT, backpropagation through expert FFNs, and synthetic-gradient
 training on TinyStories, and includes a fixed-model gradient-prediction evaluation.
 See [`exp-gpt-moe/README.md`](exp-gpt-moe/README.md).
 
